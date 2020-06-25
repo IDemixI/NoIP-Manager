@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<accounts>
+    <noip alias="">
+        <username></username>
+        <email></email>
+        <password></password>
+        <hostCount></hostCount>
+        <status></status>
+        <created></created>
+    </noip>
+</accounts>

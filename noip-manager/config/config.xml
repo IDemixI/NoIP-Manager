@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<settings>
+    <notifications>
+        <enabled>false</enabled>
+        <type>none</type>
+    </notifications>
+    <logging>
+        <level>3</level>
+        <logpath>/usr/local/NoIP-Manager/logs</logpath>
+    </logging>
+    <schedule>
+        <smart>true</smart>
+    </schedule>
+</settings>

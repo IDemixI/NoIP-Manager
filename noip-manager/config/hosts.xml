@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<hosts>
+    <host name="demix-server.ddns.net">
+        <ipv4>51.19.88.5</ipv4>
+        <lastUpdate>Jun 22, 2020 20:32 BST</lastUpdate>
+        <type>A</type>
+        <alias>Plex Server</alias>
+        <account>idemixi</account>
+        <renewalCount>0</renewalCount>
+        <lastRenewal></lastRenewal>        
+        <daysRemaining>14</daysRemaining>
+        <provider>NoIP</provider>
+        <created>23/06/2020</created>
+    </host>
+</hosts>
