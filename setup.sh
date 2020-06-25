@@ -215,8 +215,8 @@ function deploy() {
     if [ $1 == "Install" ]; then
         echo "[ ] Creating temporary directory to deploy from."
         $SUDO 'mkdir' -p $TMPDIR && $SUDO 'cp' -rf $(pwd)/noip-manager/* $TMPDIR
-        echo -e "[\e[32m\u2713\e[39m] Created temporary directory to deploy from. (/tmp/noip-manager/)"
-    elif [ $1 == "Repair" ] || [ $1 == "Upgrade"]
+        echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] Created temporary directory to deploy from. (/tmp/noip-manager/)"
+    elif [ $1 == "Repair" ] || [ $1 == "Upgrade"]; then
         echo "[ ] Checking for existing installation & moving logs and config files."
         # Remove existing installation (if it exists).
         if [ -d $INSTDIR ]; then
@@ -267,7 +267,7 @@ function deploy() {
     $SUDO sed -i '/noip-manager/d' /etc/crontab
 
     # Add an entry for noip-manager to crontab.
-    echo "$CRONJOB" | $SUDO tee -a /etc/crontab
+    echo "$CRONJOB" | $SUDO tee -a /etc/crontab >/dev/null
 
     # THIS SETS USER IN THE NOIP-RENEW-SKD SCRIPT... THIS WILL BE REMOVED AS WE WON'T DEAL WITH IT THIS WAY IN THE FUTURE.
     # $SUDO sed -i 's/USER=/USER='$USER'/1' $INSTDIR/noip-renew-skd.sh - So we either need to add $USER to the .ini file, or our executable.
@@ -278,8 +278,8 @@ function deploy() {
     echo "Logs can be found in '$LOGS'"
 
     # Remove installation folder
-    rm -r "$(dirname "$BASH_SOURCE")"
-
+    $SUDO 'rm' -r $(pwd)
+    cd ~/
 }
 
 
@@ -340,14 +340,14 @@ function uninstall() {
     # Remove crontab
     $SUDO sed -i '/noip-manager/d' /etc/crontab
     # Removing script folder & executable
-    $SUDO rm -rf $INSTDIR
-    $SUDO rm $EXECUTABLE
+    $SUDO 'rm' -rf $INSTDIR
+    $SUDO 'rm' $EXECUTABLE
     echo
     read -p 'Do you want to remove configuration & log files? (y/n): ' clearAll
     if [ "${clearAll^^}" = "Y" ]
     then
-      $SUDO rm -rf $LOGS
-      $SUDO rm -rf $CONFIG
+      $SUDO 'rm' -rf $LOGS
+      $SUDO 'rm' -rf $CONFIG
       echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] All logs and config files have been removed."
     fi
 
@@ -356,11 +356,13 @@ function uninstall() {
     echo
 
     # Remove installation folder
-    rm -r "$(dirname "$BASH_SOURCE")"
+    $SUDO 'rm' -r $(pwd)
+    cd ~/
 }
 
 
 function noip() {
+    echo
     echo "Enter your No-IP Account details. You can set additional accounts up after installation."
     read -p 'Alias: ' alias
     read -p 'Username or Email: ' uservar
@@ -378,7 +380,9 @@ function noip() {
 
 
 function notifySetup() {
-    echo "[ ] Configuring Notifications."
+    echo
+    echo "Configuring Notifications."
+    echo
 
     $SUDO xmlstarlet -q ed -L -u /settings/notifications/enabled -v "True" $CONFIG/config.xml
     $SUDO xmlstarlet -q ed -L -u /settings/notifications/type -v $1 $CONFIG/config.xml
@@ -388,7 +392,6 @@ function notifySetup() {
         "Slack") slack;;
         "Telegram") telegram;;
     esac
-    echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] Notifications have been configured."
 }
 
 
@@ -396,7 +399,7 @@ function discord() {
     echo "Enter the URL of your Discord webhook..."
     read -p 'Webhook: ' webhook
 
-    $SUDO xmlstarlet -q ed -s /settings/Notifications -t elem -n "discord_webook" -v $webhook $CONFIG/config.xml
+    $SUDO xmlstarlet -q ed -L -s /settings/Notifications -t elem -n "discord_webook" -v $webhook $CONFIG/config.xml
 }
 
 
