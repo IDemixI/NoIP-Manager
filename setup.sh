@@ -50,9 +50,15 @@
 
 #$SUDO chown $USER $INSTDIR/noip-renew-skd.sh - Keep this line. Need to work on better system for setting next crontab automagically.
 
-#################################################################
-
+# -----------------------------------------------------------------------------
 #!/bin/bash
+# Installer for NoIP Manager, written in bash
+#
+# Repository: https://github.com/IDemixI/NoIP-Manager/
+#
+# Usage: . setup.sh
+# -----------------------------------------------------------------------------
+
 set -e
 
 USER=$(whoami)
