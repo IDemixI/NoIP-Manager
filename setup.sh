@@ -39,6 +39,8 @@
 
 ##### STUFF WE FIND USEFUL - MAY USE THIS LATER! #####
 
+# THIS SETS USER IN THE NOIP-RENEW-SKD SCRIPT... THIS WILL BE REMOVED AS WE WON'T DEAL WITH IT THIS WAY IN THE FUTURE.
+# $SUDO sed -i 's/USER=/USER='$USER'/1' $INSTDIR/noip-renew-skd.sh - So we either need to add $USER to the .ini file, or our executable.
 
 # Check to see if package is installed or not.
 #if [ $(dpkg-query -W -f='${Status}' git 2>/dev/null | grep -c "ok installed") -eq 0 ];
@@ -162,7 +164,6 @@ function install() {
     fi
 
     deploy "Install"
-
 }
 
 
@@ -243,14 +244,14 @@ function deploy() {
     $SUDO 'cp' -rf $TMPDIR/* $INSTDIR
     $SUDO 'cp' $TMPDIR/noip-manager.sh $EXECUTABLE
     echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] Files have been deployed successfully."
-    
+
     echo "[ ] Setting permissions..."
     $SUDO chown $USER $INSTDIR
     $SUDO chown $USER $EXECUTABLE
     #$SUDO chown $USER $INSTDIR/noip-renew-skd.sh - Keep this line. Need to work on better system for setting next crontab automagically.
     $SUDO chmod 700 $EXECUTABLE
     echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] Permissions have been set."
-    
+
     # Check to see if deploy called in Install mode. If so, ask user to setup initial NoIP account information.
     if [ $1 == "Install" ]; then
         noip
@@ -262,16 +263,13 @@ function deploy() {
         # Call notifySetup function with type of notification as parameter.
         notifySetup "$notification"
     fi
-    
+
     # Remove noip-manager from crontab before trying to add it.
     $SUDO sed -i '/noip-manager/d' /etc/crontab
 
     # Add an entry for noip-manager to crontab.
     echo "$CRONJOB" | $SUDO tee -a /etc/crontab >/dev/null
 
-    # THIS SETS USER IN THE NOIP-RENEW-SKD SCRIPT... THIS WILL BE REMOVED AS WE WON'T DEAL WITH IT THIS WAY IN THE FUTURE.
-    # $SUDO sed -i 's/USER=/USER='$USER'/1' $INSTDIR/noip-renew-skd.sh - So we either need to add $USER to the .ini file, or our executable.
-    
     echo
     echo "Deployment Complete."
     echo "Type 'noip-manager --help' for all options."
@@ -329,8 +327,9 @@ function repair() {
     #This is just a re-installation. To be honest... Maybe add some debugging? Do we want to wipe configs? Ask user?
     # Install but with keeping logs/config - Ask user?
     # I don't know if it's worth re-writing install so you can pass it either Install or Repair...
+    # send all output to temp log file which we move into /logs/installation.log when done?
 
-    deploy "Repair"
+    # deploy "Repair" - if we call install with logging & flush configs, etc this deploy repair needs to be called in an if statement in install.
 }
 
 
@@ -399,7 +398,7 @@ function discord() {
     echo "Enter the URL of your Discord webhook..."
     read -p 'Webhook: ' webhook
 
-    $SUDO xmlstarlet -q ed -L -s /settings/Notifications -t elem -n "discord_webook" -v $webhook $CONFIG/config.xml
+    $SUDO xmlstarlet -q ed -L -s /settings/notifications -t elem -n "discord_webook" -v $webhook $CONFIG/config.xml
 }
 
 
@@ -414,8 +413,8 @@ function pushover() {
     tokenvar=`echo -n $tokenvar | base64`
     uservar=`echo -n $uservar | base64`
 
-    $SUDO xmlstarlet -q ed -s /settings/Notifications -t elem -n "pushover_token" -v $tokenvar $CONFIG/config.xml
-    $SUDO xmlstarlet -q ed -s /settings/Notifications -t elem -n "pushover_user_key" -v $uservar $CONFIG/config.xml
+    $SUDO xmlstarlet -q ed -s /settings/notifications -t elem -n "pushover_token" -v $tokenvar $CONFIG/config.xml
+    $SUDO xmlstarlet -q ed -s /settings/notifications -t elem -n "pushover_user_key" -v $uservar $CONFIG/config.xml
 }
 
 
@@ -428,8 +427,8 @@ function slack() {
 
     tokenvar=`echo -n $tokenvar | base64`
 
-    $SUDO xmlstarlet -q ed -s /settings/Notifications -t elem -n "slack_token" -v $tokenvar $CONFIG/config.xml
-    $SUDO xmlstarlet -q ed -s /settings/Notifications -t elem -n "slack_channel" -v $channel $CONFIG/config.xml
+    $SUDO xmlstarlet -q ed -s /settings/notifications -t elem -n "slack_token" -v $tokenvar $CONFIG/config.xml
+    $SUDO xmlstarlet -q ed -s /settings/notifications -t elem -n "slack_channel" -v $channel $CONFIG/config.xml
 }
 
 
