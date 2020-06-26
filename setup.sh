@@ -48,6 +48,8 @@
 #  apt-get install git;
 #fi
 
+#$SUDO chown $USER $INSTDIR/noip-renew-skd.sh - Keep this line. Need to work on better system for setting next crontab automagically.
+
 #################################################################
 
 #!/bin/bash
@@ -72,6 +74,7 @@ function config() {
     VERSION=$(wget -q -O - https://raw.githubusercontent.com/IDemixI/NoIP-Manager/master/README.md | grep "Version:" | grep -o '[0-9.]*')
     PYTHON=python3
     CRONJOB="30 0    * * *   $USER    $EXECUTABLE --renew"
+    INSTLOG=/tmp/install.log
 }
 
 
@@ -83,6 +86,8 @@ function timestamp() {
 function aptInstall() {
     if [ -z "$2" ]; then
         echo -e "[ ] Installing $1 package..." && $SUDO apt-get -y install $1 -qq && dpkg -s $1 &> /dev/null
+    elif [ $2 == "Repair" ]; then
+        $SUDO apt-get -y install $1 && dpkg -s $1 &>> $INSTLOG
     else
         $SUDO apt-get -y install $1 -qq && dpkg -s $1 &> /dev/null
     fi
@@ -98,6 +103,8 @@ function aptInstall() {
 function pipInstall() {
     if [ -z "$2" ]; then
         echo -e "[ ] Installing $1 package..." && $SUDO $PYTHON -m pip -q install $1 &> /dev/null
+    elif [ $2 == "Repair" ]; then
+        $SUDO $PYTHON -m pip install $1 &>> $INSTLOG
     else
         $SUDO $PYTHON -m pip -q install $1 &> /dev/null
     fi
@@ -119,7 +126,7 @@ function install() {
     echo
     if [ "${update^^}" = "Y" ]
     then
-        echo "[ ] Performing Apt-get Update (This can take some time)." && $SUDO apt-get update -qq
+        echo "[ ] Performing Apt-get Update (This can take some time)." && if [ $1 == "Repair"]; then $SUDO apt-get update &>> $INSTLOG; else $SUDO apt-get update -qq; fi
         echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] Apt-get Update has been performed."
     fi
 
@@ -127,7 +134,7 @@ function install() {
     PYV=`python3 -c "import sys;t='{v[0]}{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
     if [[ "$PYV" -lt "36" ]] || ! hash python3;
     then
-        echo "[ ] This script requires Python version 3.6 or higher. Attempting to install..." &&  aptInstall python3 Y
+        echo "[ ] This script requires Python version 3.6 or higher. Attempting to install..." && if [ $1 == "Repair"]; then aptInstall python3 $1; else aptInstall python3 Y; fi
         PYV=`python3 -c "import sys;t='{v[0]}{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
         if [[ "$PYV" -lt "36" ]] || ! hash python3; then
             echo -e "\e[1A\e[K[\e[31m\u2717\e[39m] Python requirement not met [3.6.0]+. You have $(python3 -V 2>&1)"
@@ -138,32 +145,36 @@ function install() {
 
     # Install correct Chromium driver. This differs depending on OS.
     echo "[ ] Installing relevent Chromium Driver for your OS."
-    aptInstall chromium-chromedriver Y || \
-        aptInstall chromium-driver Y || \
-        aptInstall chromedriver Y
+    if [ $1 == "Repair"]; then aptInstall chromium-chromedriver $1; else aptInstall chromium-chromedriver Y; fi || \
+        if [ $1 == "Repair"]; then aptInstall chromium-drive $1; else aptInstall chromium-drive Y; fi || \
+        if [ $1 == "Repair"]; then aptInstall chromedriver $1; else aptInstall chromedriver Y; fi
 
     # Update Chromium Browser or script won't work.
-    aptInstall chromium-browser 
+    if [ $1 == "Repair"]; then aptInstall chromium-browser $1; else aptInstall chromium-browser; fi
 
     # Debian9 package 'python-selenium' does not work with chromedriver, Install from pip, which is newer.
     # Firstly make sure the correct version of pip is installed.
-    aptInstall $PYTHON-pip
+    if [ $1 == "Repair"]; then aptInstall $PYTHON-pip $1; else aptInstall $PYTHON-pip; fi
 
     # Now Install Selenium via Pip.
-    pipInstall selenium
+    if [ $1 == "Repair"]; then pipInstall selenium $1; else pipInstall selenium; fi
 
     # Install XMLStarlet in order to set up and manage our config files.
-    aptInstall xmlstarlet
+    if [ $1 == "Repair"]; then aptInstall xmlstarlet $1; else aptInstall xmlstarlet; fi
 
     # Prompt user to see if they wish to set up notifications.
     echo
     read -p 'Would you like to set up Notifications at this time? (y/n): ' notify
     if [ "${notify^^}" = "Y" ]
     then
-        notifyInstall
+        notifyInstall $1
     fi
 
-    deploy "Install"
+    if [ $1 == "Repair" ]; then
+        deploy "Repair"
+    else
+        deploy "Install"
+    fi
 }
 
 
@@ -176,25 +187,25 @@ function notifyInstall() {
             "Discord Notifications")
                 echo
                 notification="Discord"
-                pipInstall discord-webhook
+                if [ $1 == "Repair"]; then pipInstall discord-webhook $1; else pipInstall discord-webhook; fi
                 break
                 ;;
             "Pushover Notifications")
                 echo
                 notification="Pushover"
-                pipInstall requests
+                if [ $1 == "Repair"]; then pipInstall requests $1; else pipInstall requests; fi
                 break
                 ;;
             "Slack Notifications")
                 echo
                 notification="Slack"
-                pipInstall slackclient
+                if [ $1 == "Repair"]; then pipInstall slackclient $1; else pipInstall slackclient; fi
                 break
                 ;;
             "Telegram Notifications")
                 echo
                 notification="Telegram"
-                pipInstall telegram-send
+                if [ $1 == "Repair"]; then pipInstall telegram-send $1; else pipInstall telegram-send; fi
                 break
                 ;;
             "None")
@@ -248,7 +259,6 @@ function deploy() {
     echo "[ ] Setting permissions..."
     $SUDO chown $USER $INSTDIR
     $SUDO chown $USER $EXECUTABLE
-    #$SUDO chown $USER $INSTDIR/noip-renew-skd.sh - Keep this line. Need to work on better system for setting next crontab automagically.
     $SUDO chmod 700 $EXECUTABLE
     echo -e "\e[1A\e[K[\e[32m\u2713\e[39m] Permissions have been set."
 
@@ -323,13 +333,22 @@ function upgrade() {
 
 
 function repair() {
-    echo "Repair selected."
-    #This is just a re-installation. To be honest... Maybe add some debugging? Do we want to wipe configs? Ask user?
-    # Install but with keeping logs/config - Ask user?
-    # I don't know if it's worth re-writing install so you can pass it either Install or Repair...
-    # send all output to temp log file which we move into /logs/installation.log when done?
+    echo "Repairing NoIP-Manager."
+    echo
+    > $INSTLOG
+    read -p 'Do you want to remove configuration files? This could help to resolve issues (y/n): ' clearCfg
+    if [ "${clearCfg^^}" = "Y" ]
+    then
+        $SUDO echo 'rm' -rf $CONFIG >> $INSTLOG
+    fi
 
-    # deploy "Repair" - if we call install with logging & flush configs, etc this deploy repair needs to be called in an if statement in install.
+    # Call install in repair mode. This will log the installation to a file.
+    install "Repair"
+
+    echo
+    echo -e "[\e[32m\u2713\e[39m] Repair complete."
+    echo "Log file for the repair can be found: $INSTLOG"
+
 }
 
 
