@@ -1,0 +1,54 @@
+## Random work-notes. Will be removed as I go.
+
+
+# [X] Now it will ask for your noip.com account information (Username/email), password, Alias (If no alias selected, username will be used)
+# [ ] For this to work we need to grab username out of noip homepage element xpath "visible-md-inline visible-lg-inline visible-sm-inline visible-xs-inline"
+
+
+# [X] Don't worry you can manage this using noip-manager --configure"
+# [X] If notifications were selected earlier, this is where they're now set up. Depending on your selection you will be asked for some details.
+# [X] Thus ends the installer. The final step is for setup.sh to delete itself along with the entire folder.
+# [X] a prompt will be displayed saying "use noip-manager --help for more information".
+
+
+# [ ] IF NOTIFICATIONS AREN'T SET UP... WE NEED TO BE ABLE TO INSTALL THE PACKAGES VIA NOIP-MANAGER --CONFIGURE COMMAND
+
+# noip-manager: If called without parameters, opens menu with some information on (see below this section)
+# --renew: This is what will be scheduled to run via crontab
+# --configure: Options such as: [1] Notification Configuration [2] Log Configuration (Level/Location) [3] Schedule Configuration (Next Run Date/Time)
+# --help: list of all commands and what they do .. basically this section but tidy.
+# --version: provides the current version of the script "Version x.x"
+# --uninstall: Uninstalls the script completely (Ask user if they wish to also remove settings & log files)
+# --repair: attempts to repair the script by checking github and downloading latest, writing over current files and setting up again
+# --upgrade: checks github and downloads latest copy of script if it's newer. "Update available: Version X.X" "Current version matches latest (X.X). No update available."
+# --logs: this will just open a view to the log file/s 
+
+# 1. Add/Remove Noip Accounts
+# 2. List all active hosts (See below)
+# 3. Check last run status
+# 4. Statistics - Total runs, total hosts updated, last host updated, next host to be updated.
+# 5. Exit (or look at showing ctrl+c to exit?)
+
+## ACTIVE HOSTS ##
+# Hostname | Account Alias | Times renewed | Last renewal | Next renewal
+# SUMMARY: Total Renewals | Last renewal | Next renewal
+
+# When a new host is added I think it should do a run to grab username & hostnames & days until expiry.
+
+# The --configure option needs to open a menu with options such as notifications, noip accounts setup, scheduled tasks.
+
+##### STUFF WE FIND USEFUL - MAY USE THIS LATER! #####
+
+# THIS SETS USER IN THE NOIP-RENEW-SKD SCRIPT... THIS WILL BE REMOVED AS WE WON'T DEAL WITH IT THIS WAY IN THE FUTURE.
+# $SUDO sed -i 's/USER=/USER='$USER'/1' $INSTDIR/noip-renew-skd.sh - So we either need to add $USER to the .ini file, or our executable.
+
+# Check to see if package is installed or not.
+#if [ $(dpkg-query -W -f='${Status}' git 2>/dev/null | grep -c "ok installed") -eq 0 ];
+#then
+#  apt-get install git;
+#fi
+
+#$SUDO chown $USER $INSTDIR/noip-renew-skd.sh - Keep this line. Need to work on better system for setting next crontab automagically.
+
+
+Repository: https://github.com/IDemixI/NoIP-Manager/
